@@ -1,0 +1,59 @@
+Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+Ambito di questa licenza — importante, leggere prima di riusare
+====================================================================
+
+Questa licenza copre SOLO i dati del registro creati dal publisher di
+questa directory:
+
+    entries.jsonl
+    anchors_index.jsonl
+
+NON copre il contenuto di anchors/*.tsr (i token RFC 3161 grezzi emessi da
+FreeTSA.org e da DigiCert in risposta a una richiesta di timestamping) né
+anchors/*.pem (i certificati delle autorità di certificazione di FreeTSA e,
+per gli anchor DigiCert, il bundle Mozilla/certifi) — sono output di terze
+parti, inclusi qui esclusivamente perché servono a verificare gli anchor
+con `openssl ts -verify` (vedi README.md). Nessuna rivendicazione di
+titolarità viene fatta su questi file: restano soggetti a qualunque
+termine (se esiste) imposto da chi li ha emessi.
+
+verify_entry.py e verify_chain.py sono script di verifica forniti insieme
+ai dati per comodità di chi li riceve; se vuoi riusarli separatamente,
+trattali come software, non come i "dati" a cui si applica questa licenza.
+
+Testo della licenza
+====================================================================
+
+Sei libero di:
+
+  - Condividere — copiare e ridistribuire il materiale con qualsiasi
+    mezzo e formato, per qualsiasi fine, anche commerciale.
+  - Modificare — remixare, trasformare il materiale e basarti su di esso
+    per qualsiasi fine, anche commerciale.
+
+Il licenziante non può revocare queste libertà fintanto che rispetti i
+termini della licenza.
+
+Alle seguenti condizioni:
+
+  - Attribuzione — Devi riconoscere una menzione di paternità adeguata,
+    fornire un link alla licenza e indicare se sono state effettuate
+    modifiche. Puoi farlo in qualsiasi maniera ragionevole possibile, ma
+    non con modalità tali da suggerire che il licenziante avalli te o il
+    tuo utilizzo del materiale.
+  - Nessuna restrizione aggiuntiva — Non puoi applicare termini legali o
+    misure tecnologiche che impongano ad altri soggetti dei vincoli
+    giuridici diversi o ulteriori rispetto a quelli previsti dalla
+    licenza.
+
+Non sei tenuto a rispettare i termini di questa licenza per quegli
+elementi del materiale che si trovino nel pubblico dominio o laddove il
+tuo utilizzo sia consentito da un'eccezione o limitazione applicabile.
+Non vengono fornite garanzie. La licenza potrebbe non conferirti tutte
+le autorizzazioni necessarie per il tuo utilizzo previsto: ad esempio,
+altri diritti come quelli di immagine, privacy o morali potrebbero
+limitare il modo in cui usi il materiale.
+
+Testo legale completo (fa fede questo, non il riassunto sopra):
+https://creativecommons.org/licenses/by/4.0/legalcode
