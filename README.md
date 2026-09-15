@@ -1,75 +1,77 @@
-# Registro pubblico FinSight — QuestionSet live del 14 settembre 2026
+# FinSight Public Ledger — Live QuestionSet, September 14, 2026
 
-Questa directory contiene **solo dati e strumenti di verifica**, non il
-codice che li ha prodotti. Ogni comando qui sotto è stato eseguito
-davvero, dentro questa stessa directory, senza importare nulla del
-progetto FinSight: se lo lanci tu ora, sulla tua macchina, con solo
-`python3` (libreria standard) e `openssl`, deve produrre lo stesso
-risultato. Se un comando non funziona così com'è scritto, è un bug di
-questo README, non qualcosa da aggiustare a occhio.
+This directory contains **only data and verification tools**, not the
+code that produced them. Every command below was actually run, inside
+this very directory, without importing anything from the FinSight
+project: if you run it yourself, right now, on your own machine, with
+only `python3` (standard library) and `openssl`, it must produce the
+same result. If a command doesn't work exactly as written, that is a bug
+in this README, not something to fix by eye.
 
-## Cosa c'è in questo registro
+## What's in this ledger
 
-- **405 domande** ("questo trimestre, il ricavo/margine di [azienda] sarà
-  sopra/sotto [soglia]?"), su **28 emittenti quotati** (elenco completo più
-  sotto), sigillate in un unico `question_set` il **14 settembre 2026**.
-- Ogni domanda è stata sottoposta a **3 motori baseline meccanici**
+- **405 questions** ("this quarter, will [company]'s revenue/margin be
+  above/below [threshold]?"), across **28 listed issuers** (full list
+  below), sealed into a single `question_set` on **September 14, 2026**.
+- Each question was submitted to **3 mechanical baseline engines**
   (`baseline-persistence-v1`, `baseline-persistence-v2`,
-  `baseline-baserate-v1` — nessun LLM in questo registro), per un totale di
-  405 × 3 = 1215 tentativi: **1197 previsioni** effettivamente scritte e
-  **18 declini** dichiarati (un motore che rifiuta esplicitamente di
-  rispondere quando non ha abbastanza storico — mai una previsione a
-  caso). 1 `question_set` + 1197 `prediction` + 18 `decline` = **1216
-  entry**, tutte scritte lo stesso giorno, 14 settembre 2026 (UTC).
-- Le domande si risolvono tra il **26 settembre 2026** e il **28 febbraio
-  2027**, quando ciascuna azienda deposita il trimestre in questione presso
-  la SEC. Nessuna domanda di questo set si risolve prima del 26 settembre
-  2026 — verificato meccanicamente al momento della generazione, non a
-  occhio (vedi `generation_procedure` nella entry `question_set`).
-- Le 28 aziende: AAPL, NVDA, AMD, QCOM, TXN, ORCL, CRM, NFLX, TSLA, HD, MA,
+  `baseline-baserate-v1` — no LLM in this ledger), for a total of
+  405 × 3 = 1215 attempts: **1197 predictions** actually written and
+  **18 declines** declared (an engine that explicitly refuses to answer
+  when it doesn't have enough history — never a random guess). 1
+  `question_set` + 1197 `prediction` + 18 `decline` = **1216 entries**,
+  all written on the same day, September 14, 2026 (UTC).
+- The questions resolve between **September 26, 2026** and
+  **February 28, 2027**, when each company files the quarter in question
+  with the SEC. No question in this set resolves before September 26,
+  2026 — verified mechanically at generation time, not by eye (see
+  `generation_procedure` in the `question_set` entry).
+- The 28 companies: AAPL, NVDA, AMD, QCOM, TXN, ORCL, CRM, NFLX, TSLA, HD, MA,
   MCD, SBUX, TGT, WMT, KHC, CL, MO, JNJ, UNH, GILD, ABBV, TMO, DHR, LMT,
   HON, CAT, VZ.
 
-## File
+## Files
 
 ```
-entries.jsonl          # tutte le 1216 entry del registro, una per riga JSON, in ordine di seq
-anchors_index.jsonl    # indice leggibile dei 4 anchor RFC 3161 (vedi sotto)
+entries.jsonl          # all 1216 ledger entries, one per JSON line, in seq order
+anchors_index.jsonl    # human-readable index of the 4 RFC 3161 anchors (see below)
 anchors/
   1_freetsa.tsr             2_digicert.tsr             3_freetsa.tsr             4_digicert.tsr
   1_freetsa.head_hash.txt   2_digicert.head_hash.txt   3_freetsa.head_hash.txt   4_digicert.head_hash.txt
   1_freetsa.pem             2_digicert.pem             3_freetsa.pem             4_digicert.pem
-verify_entry.py         # ricalcola l'hash di UNA entry (nuovo script, ~15 righe, solo libreria standard)
-verify_chain.py         # riverifica l'intera hash chain da entries.jsonl (idem)
-LICENSE                 # CC BY 4.0 — solo per i dati, vedi il file per lo scope esatto
+verify_entry.py         # recomputes the hash of ONE entry (new script, ~15 lines, standard library only)
+verify_chain.py         # re-verifies the entire hash chain from entries.jsonl (same idea)
+LICENSE                 # CC BY 4.0 — data only, see the file for the exact scope
 ```
 
-Perché 4 anchor e non 2: gli anchor 1 (FreeTSA) e 2 (DigiCert) coprono solo
-`seq=1` — il `question_set`, cioè le 405 domande e le loro soglie, ancorate
-PRIMA che un motore le vedesse (così le soglie non possono essere state
-scelte con il senno di poi). Gli anchor 3 e 4, stessi due servizi, coprono
-`seq=1216` — l'intero registro, previsioni e declini inclusi. Vedi
-"Cosa NON dimostra" più sotto per cosa questo implica davvero.
+Why 4 anchors and not 2: anchors 1 (FreeTSA) and 2 (DigiCert) cover only
+`seq=1` — the `question_set`, i.e. the 405 questions and their
+thresholds, anchored BEFORE any engine saw them (so the thresholds
+cannot have been picked with hindsight). Anchors 3 and 4, same two
+services, cover `seq=1216` — the entire ledger, predictions and declines
+included. See "What this does NOT prove" below for what this actually
+implies.
 
-## Verificare un anchor (RFC 3161), un servizio indipendente da noi
+## Verifying an anchor (RFC 3161), a service independent of us
 
-Ogni riga di `anchors_index.jsonl` è un anchor: un'autorità di timestamping
-esterna (FreeTSA.org o DigiCert) ha firmato "questo esatto hash esisteva non
-più tardi di questo momento". `anchors/` contiene già, per ciascun anchor,
-i tre file che `openssl ts -verify` richiede — non serve altro che
-`openssl` (verificato con OpenSSL 3.6.4; qualunque OpenSSL moderno va bene).
+Each line of `anchors_index.jsonl` is an anchor: an external
+timestamping authority (FreeTSA.org or DigiCert) signed "this exact hash
+existed no later than this moment". `anchors/` already contains, for
+each anchor, the three files `openssl ts -verify` requires — nothing
+else is needed beyond `openssl` (verified with OpenSSL 3.6.4; any modern
+OpenSSL will do).
 
-Comando esatto, uno per anchor — sostituisci `<coppia>` con uno dei quattro
-prefissi (`1_freetsa`, `2_digicert`, `3_freetsa`, `4_digicert`):
+Exact command, one per anchor — replace `<pair>` with one of the four
+prefixes (`1_freetsa`, `2_digicert`, `3_freetsa`, `4_digicert`):
 
 ```bash
-openssl ts -verify -in anchors/<coppia>.tsr \
-  -data anchors/<coppia>.head_hash.txt \
-  -CAfile anchors/<coppia>.pem
+openssl ts -verify -in anchors/<pair>.tsr \
+  -data anchors/<pair>.head_hash.txt \
+  -CAfile anchors/<pair>.pem
 ```
 
-Esempio concreto, copiabile e incollabile così com'è (l'anchor che copre
-l'INTERO registro, servizio DigiCert):
+Concrete example, ready to copy and paste as-is (the anchor covering the
+ENTIRE ledger, DigiCert service):
 
 ```bash
 openssl ts -verify -in anchors/4_digicert.tsr \
@@ -77,12 +79,12 @@ openssl ts -verify -in anchors/4_digicert.tsr \
   -CAfile anchors/4_digicert.pem
 ```
 
-Output atteso: `Verification: OK`. Tutti e 4 gli anchor di questa directory
-sono stati verificati così, uno per uno, il giorno di pubblicazione di
-questo README — nessuno restituisce altro che `Verification: OK`.
+Expected output: `Verification: OK`. All 4 anchors in this directory
+were verified this way, one by one, on the day this README was
+published — none returns anything other than `Verification: OK`.
 
-Per verificarli tutti e quattro in un colpo solo (nessuna dipendenza oltre
-`openssl` — niente `jq`):
+To verify all four in one shot (no dependency beyond `openssl` — no
+`jq`):
 
 ```bash
 for tsr in anchors/*.tsr; do
@@ -92,48 +94,56 @@ for tsr in anchors/*.tsr; do
 done
 ```
 
-`Verification: OK` significa: questo esatto `head_hash` è stato firmato da
-un certificato che risale alla CA in quel `.pem`, al tempo registrato dentro
-il token — verificato da `openssl`, uno strumento che non devi fidarti di
-noi per fidarti. **Da solo non dice ancora che quell'`head_hash` corrisponda
-davvero alla testa del registro in `entries.jsonl`** — quello è il prossimo
-passo.
+`Verification: OK` means: this exact `head_hash` was signed by a
+certificate that chains up to the CA in that `.pem`, at the time
+recorded inside the token — verified by `openssl`, a tool you don't
+have to trust us to trust. **On its own it does not yet say that this
+`head_hash` actually corresponds to the head of the ledger in
+`entries.jsonl`** — that's the next step.
 
-## Ricalcolare la hash chain a mano, da `entries.jsonl`
+## Recomputing the hash chain by hand, from `entries.jsonl`
 
-Ogni riga di `entries.jsonl` è una entry con questi campi: `seq` (intero
-progressivo, mai riordinato), `entry_type`, `prev_hash`, `entry_hash`,
-`payload` (leggibile) e `payload_raw` (la stringa ESATTA, byte per byte,
-usata per calcolare `entry_hash` — mai `payload`, che è solo per la
-lettura umana e può differire nella formattazione).
+Every line of `entries.jsonl` is an entry with these fields: `seq`
+(progressive integer, never reordered), `entry_type`, `prev_hash`,
+`entry_hash`, `payload` (human-readable) and `payload_raw` (the EXACT
+string, byte for byte, used to compute `entry_hash` — never `payload`,
+which is only for human reading and can differ in formatting).
 
-La formula, identica per ogni entry di ogni tipo:
+The formula, identical for every entry of every type:
 
 ```
 entry_hash = SHA256( prev_hash + b'\0' + entry_type + b'\0' + payload_raw )
 ```
 
-— tre campi concatenati come byte UTF-8, con `\0` **solo tra** i tre campi,
-mai dopo l'ultimo. Il `prev_hash` della primissima entry (`seq=1`) è 64
-zeri; da lì in poi il `prev_hash` di ogni entry è l'`entry_hash` di quella
-immediatamente precedente — una catena verificabile riga per riga leggendo
-solo questo file, nessun database necessario.
+— three fields concatenated as UTF-8 bytes, with `\0` **only between**
+the three fields, never after the last one. The `prev_hash` of the very
+first entry (`seq=1`) is 64 zeros; from there on, the `prev_hash` of
+every entry is the `entry_hash` of the entry immediately before it — a
+chain verifiable line by line by reading only this file, no database
+required.
 
-### Esempio concreto, su una riga reale del file
+### Concrete example, on a real line of the file
 
-La riga con `seq=245` (un `decline`, non una `prediction`, scelta apposta
-perché il suo `payload_raw` è abbastanza corto da leggere qui per intero):
+The line with `seq=245` (a `decline`, not a `prediction`, chosen on
+purpose because its `payload_raw` is short enough to read here in full):
 
 ```
 prev_hash   = 1ae9b0d72bc2e5aae63f3b03c1f619b78693867726c08d1c24bd3c2bbec772b0
 entry_type  = decline
 payload_raw = {"anchor_period_end":"2026-08-31","cik":"0001341439","created_at":"2026-09-14T14:12:06.403906Z","decline_id":"75350375-afe7-4207-a59f-d33071a43a3e","engine_id":"baseline-persistence-v1","horizon_quarters":1,"metric":"GROSS_MARGIN","operator":"GT","period_form":"QUARTERLY","question_set_id":"a1e58752-b054-40f2-9818-d51d7448624f","reason":"storia insufficiente: servono almeno 8 osservazioni storiche, disponibili 7","threshold":0.8829117727074218,"ticker":"ORCL"}
-entry_hash  = d4f171c3728466501939f661132805712892117587d19bc089f231854423140b   (dichiarato nel file)
+entry_hash  = d4f171c3728466501939f661132805712892117587d19bc089f231854423140b   (declared in the file)
 ```
 
-Ricalcolo a mano, con `python3` puro (richiesto per una concatenazione
-byte-esatta con separatori `\0` — `printf`/`echo` da soli non sono
-affidabili su ogni shell per questo):
+The `payload_raw` above is left exactly as it appears in the file, in
+Italian (the ledger's original working language), so you can compare it
+character for character against the real line in `entries.jsonl`. Its
+`reason` field, `"storia insufficiente: servono almeno 8 osservazioni
+storiche, disponibili 7"`, translates as: "insufficient history: at
+least 8 historical observations required, 7 available".
+
+Recomputing by hand, with plain `python3` (required for a byte-exact
+concatenation with `\0` separators — `printf`/`echo` alone are not
+reliable across every shell for this):
 
 ```bash
 python3 -c "
@@ -150,137 +160,139 @@ print(h.hexdigest())
   '{"anchor_period_end":"2026-08-31","cik":"0001341439","created_at":"2026-09-14T14:12:06.403906Z","decline_id":"75350375-afe7-4207-a59f-d33071a43a3e","engine_id":"baseline-persistence-v1","horizon_quarters":1,"metric":"GROSS_MARGIN","operator":"GT","period_form":"QUARTERLY","question_set_id":"a1e58752-b054-40f2-9818-d51d7448624f","reason":"storia insufficiente: servono almeno 8 osservazioni storiche, disponibili 7","threshold":0.8829117727074218,"ticker":"ORCL"}'
 ```
 
-Output: `d4f171c3728466501939f661132805712892117587d19bc089f231854423140b` —
-identico al valore dichiarato sopra. Eseguito così com'è scritto, appena
-prima di consegnare questo README.
+Output: `d4f171c3728466501939f661132805712892117587d19bc089f231854423140b`
+— identical to the value declared above. Run exactly as written above,
+right before this README was delivered.
 
-### Farlo per qualunque riga, senza copiare a mano una stringa enorme
+### Doing this for any line, without hand-copying a huge string
 
-Le `prediction` hanno un `payload_raw` molto più lungo del `decline` sopra
-— copiarlo a mano in una riga di comando è pratico ma fragile (un carattere
-perso e il confronto fallisce senza dirti perché). `verify_entry.py`, in
-questa stessa directory, fa esattamente lo stesso calcolo leggendo la riga
-direttamente da `entries.jsonl` invece di richiedere di ritrascriverla:
+`prediction` entries have a `payload_raw` much longer than the `decline`
+above — copying it by hand into a command line is doable but fragile
+(lose one character and the comparison fails without telling you why).
+`verify_entry.py`, in this same directory, does exactly the same
+computation by reading the line directly from `entries.jsonl` instead of
+requiring you to retype it:
 
 ```bash
-python3 verify_entry.py 245 entries.jsonl   # lo stesso esempio di sopra
-python3 verify_entry.py 2 entries.jsonl     # una prediction reale, a scelta
+python3 verify_entry.py 245 entries.jsonl   # the same example as above
+python3 verify_entry.py 2 entries.jsonl     # any real prediction
 ```
 
-Per riverificare l'INTERA catena, tutte le 1216 entry, in un colpo solo —
-`verify_chain.py`, anch'esso in questa directory, ~30 righe, solo libreria
-standard:
+To re-verify the ENTIRE chain, all 1216 entries, in one shot —
+`verify_chain.py`, also in this directory, ~30 lines, standard library
+only:
 
 ```bash
 python3 verify_chain.py entries.jsonl
 ```
 
-Output atteso: `Catena intatta: 1216 entry verificate, dalla prima
-(prev_hash=64 zeri) a seq=1216.` seguito dall'`head_hash` finale. Per
-legare questo risultato a un anchor RFC 3161 concreto (chiudendo il cerchio
-con la sezione precedente), passa come secondo argomento l'`head_hash` letto
-da uno dei file `anchors/*.head_hash.txt` (o dal campo `head_hash` di
-`anchors_index.jsonl`):
+Expected output: `Chain intact: 1216 entries verified, from the first
+(prev_hash=64 zeros) to seq=1216.` followed by the final `head_hash`. To
+tie this result to a concrete RFC 3161 anchor (closing the loop with the
+previous section), pass as a second argument the `head_hash` read from
+one of the `anchors/*.head_hash.txt` files (or from the `head_hash`
+field of `anchors_index.jsonl`):
 
 ```bash
 python3 verify_chain.py entries.jsonl "$(cat anchors/4_digicert.head_hash.txt)"
 ```
 
-Output atteso: oltre alla riga di sopra, `MATCH con l'head_hash atteso
-(...)`. Eseguito così com'è scritto: la catena ricalcolata da
-`entries.jsonl` da sola arriva esattamente all'`head_hash` che l'anchor 4
-ha fatto firmare a DigiCert — le due verifiche insieme (questa + `openssl
-ts -verify` sopra) sono ciò che dimostra che le 1216 entry esistevano,
-invariate, non oltre il momento firmato da quell'anchor.
+Expected output: in addition to the line above, `MATCH with expected
+head_hash (...)`. Run exactly as written: the chain recomputed from
+`entries.jsonl` alone lands exactly on the head_hash that anchor 4 had
+DigiCert sign — the two verifications together (this one + `openssl ts
+-verify` above) are what proves that the 1216 entries existed, unchanged,
+no later than the moment signed by that anchor.
 
-## Schema dei campi di una entry
+## Field schema of an entry
 
-Ogni riga di `entries.jsonl`:
+Every line of `entries.jsonl`:
 
-| campo | significato |
+| field | meaning |
 |---|---|
-| `seq` | posizione progressiva nella catena, a partire da 1, mai riordinata |
-| `entry_type` | `question_set`, `prediction`, o `decline` (nessuna `resolution` ancora: le domande si risolvono da fine settembre 2026 in poi) |
-| `prev_hash` | `entry_hash` della entry precedente (64 zeri per `seq=1`) |
-| `entry_hash` | SHA-256 di `prev_hash` + `entry_type` + `payload_raw`, vedi sopra |
-| `payload` | il contenuto della entry, riformattato per la lettura umana |
-| `payload_raw` | la stringa esatta usata per calcolare `entry_hash` — usa questa, non `payload`, per riverificare |
+| `seq` | progressive position in the chain, starting at 1, never reordered |
+| `entry_type` | `question_set`, `prediction`, or `decline` (no `resolution` yet: questions resolve starting late September 2026) |
+| `prev_hash` | `entry_hash` of the preceding entry (64 zeros for `seq=1`) |
+| `entry_hash` | SHA-256 of `prev_hash` + `entry_type` + `payload_raw`, see above |
+| `payload` | the entry's content, reformatted for human reading |
+| `payload_raw` | the exact string used to compute `entry_hash` — use this, not `payload`, to re-verify |
 
-Dentro `payload`, per tipo:
+Inside `payload`, by type:
 
-- **`question_set`** (una sola entry, `seq=1`): `question_set_id`,
-  `generator_id`, `generation_procedure` (il metodo con cui le 405 domande
-  sono state generate, in prosa — non verificabile crittograficamente, solo
-  la sua ESISTENZA a questa data lo è), e `questions[]`, la lista delle 405
-  domande: `ticker`/`cik` (l'azienda), `metric` (`REVENUE`, `GROSS_MARGIN`
-  o `OPERATING_MARGIN`), `period_form` (sempre `QUARTERLY` qui),
-  `anchor_period_end` (l'ultimo trimestre già depositato, punto di
-  partenza), `horizon_quarters` (1 o 2 trimestri più avanti), `operator`
-  (sempre `GT`, "maggiore di") e `threshold` (la soglia numerica).
-- **`prediction`**: `prediction_id`, `question_set_id` (a quale domanda
-  risponde), `engine_id` (quale dei 3 motori baseline), gli stessi campi
-  identificativi della domanda (`ticker`, `metric`, `threshold`, ...),
-  `probability` (la previsione vera e propria, 0–1), `rationale` (una
-  spiegazione testuale del calcolo, in prosa), `resolution_deadline` (la
-  data entro cui si risolve), `status` (`PENDING` per tutte, qui — nessuna
-  ancora risolta), e i campi `resolved_at`/`resolved_value`/
-  `resolution_note`, tutti `null` finché `status` resta `PENDING`.
-- **`decline`**: come `prediction` ma senza `probability`/`rationale` — al
-  loro posto, `reason`: perché quel motore ha rifiutato esplicitamente di
-  rispondere a quella domanda (tipicamente storico insufficiente).
+- **`question_set`** (a single entry, `seq=1`): `question_set_id`,
+  `generator_id`, `generation_procedure` (the method used to generate the
+  405 questions, in prose — not cryptographically verifiable, only its
+  EXISTENCE at this date is), and `questions[]`, the list of the 405
+  questions: `ticker`/`cik` (the company), `metric` (`REVENUE`,
+  `GROSS_MARGIN` or `OPERATING_MARGIN`), `period_form` (always
+  `QUARTERLY` here), `anchor_period_end` (the last quarter already
+  filed, the starting point), `horizon_quarters` (1 or 2 quarters
+  ahead), `operator` (always `GT`, "greater than") and `threshold` (the
+  numeric threshold).
+- **`prediction`**: `prediction_id`, `question_set_id` (which question
+  it answers), `engine_id` (which of the 3 baseline engines), the same
+  identifying fields as the question (`ticker`, `metric`, `threshold`,
+  ...), `probability` (the actual prediction, 0–1), `rationale` (a
+  textual explanation of the computation, in prose), `resolution_deadline`
+  (the date by which it resolves), `status` (`PENDING` for all of them
+  here — none resolved yet), and the `resolved_at`/`resolved_value`/
+  `resolution_note` fields, all `null` while `status` stays `PENDING`.
+- **`decline`**: like `prediction` but without `probability`/`rationale`
+  — in their place, `reason`: why that engine explicitly refused to
+  answer that question (typically insufficient history).
 
-## Cosa questo registro dimostra — e cosa NON dimostra
+## What this ledger proves — and what it does NOT prove
 
-**Dimostra**: che queste 405 domande, le loro soglie, e le 1197 previsioni
-(con le rispettive probabilità) **esistevano, testualmente identiche a come
-le leggi qui, non più tardi delle date firmate dai quattro anchor** — il
-14 settembre 2026, 14:12 UTC per le domande/soglie (anchor 1–2, prima che
-qualunque motore le vedesse) e lo stesso giorno, 21:07 UTC, per l'intero
-registro incluse tutte le previsioni (anchor 3–4). Non è una nostra
-affermazione: è quello che `openssl ts -verify` — uno strumento
-indipendente, che non richiede di fidarsi di questo codice — conferma
-sopra, combinato con la hash chain ricalcolata a mano da questo stesso
-file. Nessuna riga può essere stata alterata dopo quella data senza
-rompere la catena in un punto rilevabile da chiunque, con gli stessi due
-comandi.
+**It proves**: that these 405 questions, their thresholds, and the 1197
+predictions (with their respective probabilities) **existed, textually
+identical to how you read them here, no later than the dates signed by
+the four anchors** — September 14, 2026, 14:12 UTC for the
+questions/thresholds (anchors 1–2, before any engine saw them) and the
+same day, 21:07 UTC, for the entire ledger including all predictions
+(anchors 3–4). This is not a claim we're making: it is what `openssl ts
+-verify` — an independent tool, one that doesn't require trusting this
+code — confirms above, combined with the hash chain recomputed by hand
+from this same file. No line could have been altered after that date
+without breaking the chain at a point detectable by anyone, with the
+same two commands.
 
-**NON dimostra**:
+**It does NOT prove**:
 
-- **Che un motore su infrastruttura che non controlliamo abbia usato solo
-  gli input dichiarati.** `rationale` e `generation_procedure` sono testo:
-  l'anchor certifica che quel testo esisteva, non che descriva onestamente
-  come la previsione sia stata davvero calcolata, né che il processo che
-  l'ha prodotta non avesse accesso a informazioni diverse da quelle
-  dichiarate. Questo registro prova l'esistenza e l'integrità di
-  un'affermazione, non la fedeltà del processo che l'ha generata.
-- **Che le previsioni siano corrette, ben calibrate o utili.** Solo che
-  esistevano, invariate, a quella data — la loro qualità si giudica quando
-  si risolvono (da fine settembre 2026), non qui.
-- **Che il codice pubblicato altrove corrisponda esattamente al codice che
-  ha davvero generato queste previsioni** — questa directory non contiene
-  codice sorgente (vedi sotto).
-- **Che questo sia l'unico registro esistente con queste domande**, né
-  che nessun'altra previsione sulla stessa domanda sia mai stata scritta
-  altrove: quel vincolo (mai la stessa domanda due volte allo stesso
-  motore) vive nel codice, non è verificabile da questi soli file.
-- **Un'ora esatta**, solo un limite superiore: un anchor RFC 3161 prova
-  "non più tardi di" il tempo firmato, mai "esattamente in quel momento".
-- **Nulla su ciò che accade dopo `covered_seq`**: un anchor copre la catena
-  solo fino alla entry che copriva quando è stato richiesto. Se in futuro
-  questo registro viene esteso con nuove previsioni, quelle nuove entry
-  restano prive di questa garanzia finché non vengono ancorate a loro
-  volta con un anchor successivo (idealmente incluso nello stesso export
-  che le pubblica).
-- **Le risoluzioni**: nessuna domanda qui è ancora risolta (tutte
-  `PENDING`); l'accuratezza dei tre motori si potrà giudicare solo quando
-  arriveranno le risoluzioni reali, in un futuro aggiornamento di questo
-  registro — non coperte da questo export.
+- **That an engine running on infrastructure we don't control used only
+  the declared inputs.** `rationale` and `generation_procedure` are
+  text: the anchor certifies that this text existed, not that it
+  honestly describes how the prediction was actually computed, nor that
+  the process that produced it had no access to information other than
+  what was declared. This ledger proves the existence and integrity of a
+  claim, not the faithfulness of the process that generated it.
+- **That the predictions are correct, well calibrated, or useful.** Only
+  that they existed, unchanged, at that date — their quality is judged
+  when they resolve (from late September 2026 onward), not here.
+- **That the code published elsewhere corresponds exactly to the code
+  that actually generated these predictions** — this directory contains
+  no source code (see below).
+- **That this is the only ledger with these questions**, nor that no
+  other prediction on the same question was ever written elsewhere: that
+  constraint (never the same question twice to the same engine) lives in
+  the code, and is not verifiable from these files alone.
+- **An exact time**, only an upper bound: an RFC 3161 anchor proves "no
+  later than" the signed time, never "exactly at that moment".
+- **Anything about what happens after `covered_seq`**: an anchor covers
+  the chain only up to the entry it covered when it was requested. If
+  this ledger is extended in the future with new predictions, those new
+  entries remain without this guarantee until they too are anchored by a
+  subsequent anchor (ideally included in the same export that publishes
+  them).
+- **The resolutions**: no question here is resolved yet (all `PENDING`);
+  the accuracy of the three engines can only be judged once the actual
+  resolutions arrive, in a future update to this ledger — not covered by
+  this export.
 
-## Codice sorgente
+## Source code
 
-Questa directory contiene deliberatamente **solo dati e strumenti di
-verifica indipendenti dal codice che li ha prodotti** — nessun modulo del
-progetto che genera domande, esegue i motori di previsione o produce
-questo stesso export.
+This directory deliberately contains **only data and verification tools
+independent of the code that produced them** — no module of the project
+that generates questions, runs the prediction engines, or produces this
+very export.
 
 Source code available on request — open an issue on this repository.

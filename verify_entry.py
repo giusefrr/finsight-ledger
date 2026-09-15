@@ -1,25 +1,26 @@
 #!/usr/bin/env python3
-"""Ricalcola l'entry_hash di UNA riga di entries.jsonl e lo confronta con
-quello dichiarato nella riga stessa — la stessa formula usata per costruire
-l'intero registro (SHA-256 di prev_hash + b'\\0' + entry_type + b'\\0' +
-payload_raw, MAI una ri-serializzazione di `payload`), qui reimplementata da
-zero in ~15 righe di libreria standard: nessuna dipendenza da finsight,
-nessun modulo di questo repository importato.
+"""Recomputes the entry_hash of ONE line of entries.jsonl and compares it
+against the one declared in the line itself — the same formula used to
+build the entire ledger (SHA-256 of prev_hash + b'\\0' + entry_type + b'\\0' +
+payload_raw, NEVER a re-serialization of `payload`), reimplemented here from
+scratch in ~15 lines of standard library: no dependency on finsight, no
+module of this repository imported.
 
-Uso:
+Usage:
     python3 verify_entry.py <seq> [entries.jsonl]
 
-Uscita 0 e "MATCH" se l'hash dichiarato corrisponde a quanto ricalcolato da
-questo script, leggendo solo prev_hash/entry_type/payload_raw della riga con
-quel `seq`; uscita 1 e "MISMATCH" (con i due hash affiancati) altrimenti —
-un MISMATCH significa che quella riga è stata alterata dopo essere stata
-scritta, oppure che il file è corrotto.
+Exit 0 and "MATCH" if the declared hash matches what this script
+recomputes, reading only prev_hash/entry_type/payload_raw of the row with
+that `seq`; exit 1 and "MISMATCH" (with the two hashes side by side)
+otherwise — a MISMATCH means either that row was altered after being
+written, or the file is corrupted.
 
-Nota: un MATCH da solo prova solo che questa riga è internamente coerente
-con se stessa. Non prova che il suo prev_hash sia davvero l'entry_hash della
-riga precedente (quello lo controlla verify_chain.py, sull'intero file), né
-che l'intera catena risalga fino a un anchor RFC 3161 firmato da un'autorità
-esterna (quello lo controlla `openssl ts -verify`, vedi README.md).
+Note: a MATCH on its own only proves that this row is internally
+consistent with itself. It does not prove that its prev_hash is really the
+entry_hash of the preceding row (that's what verify_chain.py checks, over
+the whole file), nor that the entire chain traces back to an RFC 3161
+anchor signed by an external authority (that's what `openssl ts -verify`
+checks, see README.md).
 """
 
 from __future__ import annotations
@@ -41,7 +42,7 @@ def compute_entry_hash(prev_hash: str, entry_type: str, payload_raw: str) -> str
 
 def main(argv: list[str]) -> int:
     if len(argv) < 1:
-        print("uso: python3 verify_entry.py <seq> [entries.jsonl]", file=sys.stderr)
+        print("usage: python3 verify_entry.py <seq> [entries.jsonl]", file=sys.stderr)
         return 2
     seq_wanted = int(argv[0])
     path = argv[1] if len(argv) > 1 else "entries.jsonl"
@@ -52,21 +53,21 @@ def main(argv: list[str]) -> int:
             if entry["seq"] == seq_wanted:
                 break
         else:
-            print(f"seq={seq_wanted} non trovato in {path}", file=sys.stderr)
+            print(f"seq={seq_wanted} not found in {path}", file=sys.stderr)
             return 1
 
     computed = compute_entry_hash(entry["prev_hash"], entry["entry_type"], entry["payload_raw"])
     declared = entry["entry_hash"]
 
-    print(f"seq         = {entry['seq']}")
-    print(f"entry_type  = {entry['entry_type']}")
-    print(f"prev_hash   = {entry['prev_hash']}")
-    print(f"ricalcolato = {computed}")
-    print(f"dichiarato  = {declared}")
+    print(f"seq        = {entry['seq']}")
+    print(f"entry_type = {entry['entry_type']}")
+    print(f"prev_hash  = {entry['prev_hash']}")
+    print(f"computed   = {computed}")
+    print(f"declared   = {declared}")
     if computed == declared:
         print("MATCH")
         return 0
-    print("MISMATCH — questa entry non corrisponde al proprio entry_hash dichiarato")
+    print("MISMATCH — this entry does not match its declared entry_hash")
     return 1
 
 

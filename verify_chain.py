@@ -1,30 +1,31 @@
 #!/usr/bin/env python3
-"""Riverifica l'INTERA hash chain di entries.jsonl, riga per riga, dalla
-prima (prev_hash = 64 zeri) all'ultima, e stampa l'head_hash finale.
+"""Re-verifies the ENTIRE hash chain of entries.jsonl, line by line, from
+the first (prev_hash = 64 zeros) to the last, and prints the final
+head_hash.
 
-Nessuna dipendenza da finsight: la formula (SHA-256 di prev_hash + b'\\0' +
-entry_type + b'\\0' + payload_raw) è reimplementata qui da zero, con la sola
-libreria standard di Python, leggendo esclusivamente questo file.
+No dependency on finsight: the formula (SHA-256 of prev_hash + b'\\0' +
+entry_type + b'\\0' + payload_raw) is reimplemented here from scratch, with
+only Python's standard library, reading exclusively this file.
 
-Uso:
-    python3 verify_chain.py entries.jsonl [head_hash_atteso]
+Usage:
+    python3 verify_chain.py entries.jsonl [expected_head_hash]
 
-Senza il secondo argomento, stampa quante entry sono state verificate e
-l'head_hash finale. Con il secondo argomento (es. il contenuto di uno dei
-file anchors/*.head_hash.txt, o il campo "head_hash" di una riga di
-anchors_index.jsonl), confronta anche quell'head_hash con quello appena
-ricalcolato: un MATCH lega la catena così riverificata a un anchor RFC 3161
-verificabile con `openssl ts -verify` (vedi README.md) — le due verifiche
-insieme sono ciò che dimostra che le entry fino a quel punto della catena
-esistevano, invariate, non oltre la data firmata da quell'anchor.
+Without the second argument, prints how many entries were verified and the
+final head_hash. With the second argument (e.g. the contents of one of the
+anchors/*.head_hash.txt files, or the "head_hash" field of a line of
+anchors_index.jsonl), also compares that head_hash against the one just
+recomputed: a MATCH ties the chain re-verified this way to an RFC 3161
+anchor verifiable with `openssl ts -verify` (see README.md) — the two
+verifications together are what proves the entries up to that point in the
+chain existed, unchanged, no later than the date signed by that anchor.
 
-Esce con un errore esplicito (mai un "sembra a posto" silenzioso) al primo
-punto in cui:
-- il prev_hash dichiarato in una riga non è l'entry_hash della riga
-  precedente (la catena è stata riordinata, o manca una entry);
-- l'entry_hash dichiarato in una riga non corrisponde a quanto ricalcolato
-  da prev_hash/entry_type/payload_raw di quella riga (la riga è stata
-  alterata dopo essere stata scritta).
+Exits with an explicit error (never a silent "looks fine") at the first
+point where:
+- the prev_hash declared in a row is not the entry_hash of the preceding
+  row (the chain has been reordered, or an entry is missing);
+- the entry_hash declared in a row does not match what is recomputed from
+  that row's prev_hash/entry_type/payload_raw (the row was altered after
+  being written).
 """
 
 from __future__ import annotations
@@ -57,8 +58,8 @@ def main(argv: list[str]) -> int:
             entry = json.loads(line)
             if entry["prev_hash"] != prev_hash:
                 print(
-                    f"CATENA ROTTA a seq={entry['seq']}: prev_hash dichiarato "
-                    f"({entry['prev_hash']}) non è l'entry_hash della entry precedente "
+                    f"CHAIN BROKEN at seq={entry['seq']}: declared prev_hash "
+                    f"({entry['prev_hash']}) is not the entry_hash of the preceding entry "
                     f"({prev_hash})",
                     file=sys.stderr,
                 )
@@ -68,8 +69,8 @@ def main(argv: list[str]) -> int:
             )
             if computed != entry["entry_hash"]:
                 print(
-                    f"MANOMESSA: seq={entry['seq']} — entry_hash dichiarato "
-                    f"({entry['entry_hash']}) non corrisponde a quanto ricalcolato "
+                    f"TAMPERED: seq={entry['seq']} — declared entry_hash "
+                    f"({entry['entry_hash']}) does not match recomputed value "
                     f"({computed})",
                     file=sys.stderr,
                 )
@@ -77,13 +78,13 @@ def main(argv: list[str]) -> int:
             prev_hash = entry["entry_hash"]
             n += 1
 
-    print(f"Catena intatta: {n} entry verificate, dalla prima (prev_hash=64 zeri) a seq={n}.")
-    print(f"head_hash finale (seq={n}) = {prev_hash}")
+    print(f"Chain intact: {n} entries verified, from the first (prev_hash=64 zeros) to seq={n}.")
+    print(f"final head_hash (seq={n}) = {prev_hash}")
     if expected_final is not None:
         if prev_hash == expected_final:
-            print(f"MATCH con l'head_hash atteso ({expected_final})")
+            print(f"MATCH with expected head_hash ({expected_final})")
         else:
-            print(f"NON corrisponde all'head_hash atteso ({expected_final})", file=sys.stderr)
+            print(f"does NOT match expected head_hash ({expected_final})", file=sys.stderr)
             return 1
     return 0
 
