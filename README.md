@@ -20,7 +20,7 @@ mechanical baselines had already answered.
 - Each question was submitted to **5 engines**: three mechanical
   baselines (`baseline-persistence-v1`, `baseline-persistence-v2`,
   `baseline-baserate-v1` — never see any filing text, numeric history
-  only) plus two engines built on Claude Sonnet 4.5
+  only) plus two engines built on Claude Sonnet 4.6 (see note below)
   (`finsight-llm-sonnet45-numbers-v1`, given exactly the same numeric
   history the baselines get and nothing more; `finsight-llm-sonnet45-docs-v1`,
   given that same numeric history plus pre-extracted MD&A and Risk
@@ -32,6 +32,16 @@ mechanical baselines had already answered.
   `decline` = **2026 entries**, written between September 14 and
   September 19, 2026 (UTC), as engines were added incrementally (see "Why
   10 anchors and not 2" below).
+- **Note on the LLM engine identifiers**: `finsight-llm-sonnet45-numbers-v1`
+  and `finsight-llm-sonnet45-docs-v1` carry the label "sonnet45" for
+  historical reasons only. The model actually used for every one of their
+  predictions is **`claude-sonnet-4-6`** (Claude Sonnet 4.6), pinned in the
+  engine code together with the prompt hash (the `[prompt_hash=...]` at
+  the end of each `rationale`). Engine identifiers are part of the sealed
+  record and cannot be renamed without breaking the hash chain. The model
+  name itself is not written into the entries, so this is a statement
+  about the code, not something the ledger alone can prove (see "What
+  this ledger proves" below).
 - The questions resolve between **September 26, 2026** and
   **February 28, 2027**, when each company files the quarter in question
   with the SEC. No question in this set resolves before September 26,
@@ -260,7 +270,7 @@ Inside `payload`, by type:
   numeric threshold).
 - **`prediction`**: `prediction_id`, `question_set_id` (which question
   it answers), `engine_id` (which of the five engines — three mechanical
-  baselines or the two Claude Sonnet 4.5 engines), the same identifying
+  baselines or the two Claude Sonnet 4.6 engines), the same identifying
   fields as the question (`ticker`, `metric`, `threshold`, ...),
   `probability` (the actual prediction, 0–1), `rationale` (a textual
   explanation of the computation, in prose), `resolution_deadline` (the
